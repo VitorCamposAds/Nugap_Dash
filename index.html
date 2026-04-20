@@ -1,423 +1,449 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang='pt-BR' data-theme='light'>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nugap Analytics Dashboard</title>
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root, [data-theme="light"] {
-      --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9; --color-surface-offset:#f3f0ec; --color-border:#d4d1ca;
-      --color-text:#28251d; --color-text-muted:#67655f; --color-text-faint:#9a9892; --color-text-inverse:#f9f8f4;
-      --color-primary:#01696f; --color-primary-hover:#0c4e54; --color-success:#437a22; --color-warning:#da7101; --color-error:#a13544;
-      --color-blue:#006494; --color-purple:#7a39bb;
-      --shadow-sm:0 1px 2px rgba(40,37,29,.06); --shadow-md:0 8px 24px rgba(40,37,29,.08); --radius-md:.75rem; --radius-lg:1rem; --radius-xl:1.25rem;
-      --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem;
-      --text-xs:.78rem; --text-sm:.92rem; --text-base:1rem; --text-lg:1.2rem; --text-xl:1.8rem; --text-2xl:2.5rem;
-      --font-body:'Satoshi', system-ui, sans-serif; --font-display:'Cabinet Grotesk', 'Satoshi', sans-serif;
-    }
-    [data-theme="dark"] {
-      --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#201f1d; --color-surface-offset:#262422; --color-border:#393836;
-      --color-text:#e1dfda; --color-text-muted:#a7a49d; --color-text-faint:#76736c; --color-text-inverse:#171614;
-      --color-primary:#4f98a3; --color-primary-hover:#67acb6; --color-success:#7cb45b; --color-warning:#fdab43; --color-error:#dd6974;
-      --color-blue:#6aaed6; --color-purple:#b08ae0;
-      --shadow-sm:0 1px 2px rgba(0,0,0,.20); --shadow-md:0 10px 28px rgba(0,0,0,.32);
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:var(--font-body);background:var(--color-bg);color:var(--color-text);line-height:1.5}
-    .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
-    .sidebar{background:var(--color-surface);border-right:1px solid var(--color-border);padding:var(--space-8) var(--space-5);position:sticky;top:0;height:100vh}
-    .brand{display:flex;align-items:center;gap:12px;margin-bottom:var(--space-8)}
-    .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--color-primary),var(--color-blue));display:grid;place-items:center;color:white;font-weight:700}
-    .brand h1{font-family:var(--font-display);font-size:1.15rem;line-height:1.1}
-    .brand small{display:block;color:var(--color-text-muted);font-size:var(--text-xs);margin-top:4px}
-    .nav{display:flex;flex-direction:column;gap:10px}
-    .tab-btn{display:flex;align-items:center;gap:10px;width:100%;padding:14px 16px;border-radius:14px;border:1px solid transparent;background:transparent;color:var(--color-text);font-size:var(--text-sm);cursor:pointer;text-align:left}
-    .tab-btn.active,.tab-btn:hover{background:var(--color-surface-offset);border-color:var(--color-border)}
-    .sidebar-foot{margin-top:var(--space-8);padding-top:var(--space-6);border-top:1px solid var(--color-border);display:grid;gap:14px}
-    .theme-toggle{padding:12px 14px;border-radius:12px;background:var(--color-surface-offset);border:1px solid var(--color-border);cursor:pointer;color:var(--color-text)}
-    .main{padding:var(--space-6) var(--space-8) var(--space-8)}
-    .topbar{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:var(--space-8)}
-    .hero h2{font-family:var(--font-display);font-size:clamp(2rem,3vw,3rem);line-height:1.05;margin-bottom:8px}
-    .hero p{color:var(--color-text-muted);max-width:70ch}
-    .period{font-size:var(--text-sm);color:var(--color-text-muted);padding:10px 14px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:999px}
-    .tab-panel{display:none}
-    .tab-panel.active{display:block}
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:var(--space-8)}
-    .card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm)}
-    .kpi{padding:20px}
-    .kpi .label{font-size:var(--text-xs);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:10px}
-    .kpi .value{font-size:clamp(1.8rem,3vw,2.7rem);font-family:var(--font-display);line-height:1;font-variant-numeric:tabular-nums}
-    .kpi .meta{margin-top:10px;font-size:var(--text-sm);color:var(--color-text-muted)}
-    .grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-bottom:16px}
-    .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:16px}
-    .panel{padding:20px}
-    .panel h3{font-family:var(--font-display);font-size:1.25rem;margin-bottom:6px}
-    .panel p{color:var(--color-text-muted);font-size:var(--text-sm);margin-bottom:16px}
-    .insights{display:grid;gap:12px}
-    .insight{padding:14px 16px;background:var(--color-surface-offset);border:1px solid var(--color-border);border-radius:14px}
-    .insight strong{display:block;margin-bottom:4px}
-    table{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
-    th,td{padding:12px 10px;border-bottom:1px solid var(--color-border);text-align:left;vertical-align:top}
-    th{color:var(--color-text-muted);font-weight:600}
-    .badge{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
-    .good{background:rgba(67,122,34,.12);color:var(--color-success)}
-    .warn{background:rgba(218,113,1,.12);color:var(--color-warning)}
-    .bad{background:rgba(161,53,68,.12);color:var(--color-error)}
-    .tabs-mobile{display:none}
-    canvas{width:100% !important;height:320px !important}
-    .small canvas{height:260px !important}
-    .business-list{display:grid;gap:14px}
-    .business-item{padding:16px;border:1px solid var(--color-border);background:var(--color-surface-offset);border-radius:16px}
-    .business-item h4{margin-bottom:6px;font-size:1rem}
-    .business-item p{margin:0;color:var(--color-text-muted);font-size:var(--text-sm)}
-    .footer-note{margin-top:18px;color:var(--color-text-muted);font-size:var(--text-xs)}
-    @media (max-width: 1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}.app{grid-template-columns:1fr}.sidebar{display:none}.tabs-mobile{display:flex;gap:8px;overflow:auto;margin-bottom:16px}.tab-btn{white-space:nowrap}}
-    @media (max-width: 640px){.main{padding:20px}.kpi-grid{grid-template-columns:1fr}.topbar{flex-direction:column}.period{border-radius:14px}}
-  </style>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Dashboard Nugap · AARRR v2</title>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap' rel='stylesheet'>
+<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+<style>
+:root,[data-theme=light]{
+  --bg:#f5f4f0;--surface:#fdfcf9;--surface2:#f0ede7;--text:#1a1a2e;
+  --muted:#6b7280;--faint:#b0aaa0;--border:#e0dbd2;
+  --primary:#01696f;--primary-light:rgba(1,105,111,.12);
+  --accent:#c8870a;--accent-light:rgba(200,135,10,.1);
+  --good:#2e7d32;--good-light:rgba(46,125,50,.12);
+  --warn:#b45309;--warn-light:rgba(180,83,9,.1);
+  --shadow:0 2px 8px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);
+  --radius:16px;
+}
+[data-theme=dark]{
+  --bg:#0f0f12;--surface:#18181c;--surface2:#1e1e24;--text:#e8e8ec;
+  --muted:#9ca3af;--faint:#4b5563;--border:#2a2a32;
+  --primary:#3d9ea8;--primary-light:rgba(61,158,168,.12);
+  --accent:#f0a832;--accent-light:rgba(240,168,50,.1);
+  --good:#5cb85c;--good-light:rgba(92,184,92,.1);
+  --warn:#f59e0b;--warn-light:rgba(245,158,11,.1);
+  --shadow:0 2px 8px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+.header{position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);padding:0 20px}
+[data-theme=light] .header{background:rgba(245,244,240,.9);backdrop-filter:blur(14px)}
+[data-theme=dark] .header{background:rgba(15,15,18,.9);backdrop-filter:blur(14px)}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px}
+.logo svg{flex-shrink:0}
+.logo-text{font-size:.95rem;font-weight:700;letter-spacing:-.01em}
+.logo-sub{font-size:.75rem;color:var(--muted);font-weight:400}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{padding:8px 14px;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .15s}
+.btn:hover{background:var(--surface2)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{opacity:.88}
+.tabs-bar{border-bottom:1px solid var(--border);padding:0 20px;overflow-x:auto}
+.tabs-inner{max-width:1440px;margin:0 auto;display:flex;gap:2px;padding:0 0 0 0}
+.tab-btn{padding:11px 16px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.page{display:none;max-width:1440px;margin:0 auto;padding:24px 20px 60px}
+.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.kpi-label{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.kpi-val{font-size:2rem;font-weight:800;letter-spacing:-.03em;line-height:1}
+.kpi-sub{font-size:.75rem;color:var(--muted);margin-top:5px}
+.kpi-acc{color:var(--primary)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g2l{grid-template-columns:2fr 1fr}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card-title{font-size:.9rem;font-weight:700;margin-bottom:16px;color:var(--text)}
+.chart-wrap{position:relative;height:300px;width:100%}
+.note{border-left:3px solid var(--accent);padding:10px 14px;background:var(--accent-light);border-radius:8px;margin-top:12px;font-size:.84rem}
+.note strong{color:var(--accent)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{padding:9px 12px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:2px solid var(--border)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:.74rem;font-weight:700}
+.b-ok{background:var(--good-light);color:var(--good)}
+.b-partial{background:var(--accent-light);color:var(--accent)}
+.section-title{font-size:1.3rem;font-weight:800;margin-bottom:20px;letter-spacing:-.02em}
+.alavanca-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.alav-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.alav-titulo{font-size:.95rem;font-weight:700}
+.alav-badges{display:flex;gap:6px;flex-shrink:0}
+.alav-metrica{font-size:.8rem;color:var(--muted);background:var(--surface2);padding:4px 10px;border-radius:6px;display:inline-block}
+.alav-desc{font-size:.84rem;color:var(--muted)}
+.alav-acao{font-size:.84rem;border-left:3px solid var(--primary);padding-left:10px;color:var(--text)}
+.alav-acao strong{color:var(--primary)}
+.imp-alto{background:var(--good-light);color:var(--good)}
+.imp-medio{background:var(--accent-light);color:var(--accent)}
+.urg-imm{background:rgba(239,68,68,.1);color:#dc2626}
+[data-theme=dark] .urg-imm{color:#f87171}
+.urg-curto{background:var(--accent-light);color:var(--accent)}
+.urg-medio{background:var(--primary-light);color:var(--primary)}
+.divider{height:1px;background:var(--border);margin:6px 0}
+@media(max-width:900px){.g2,.g3,.g2l{grid-template-columns:1fr}.chart-wrap{height:240px}}
+</style>
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="logo">N</div>
-      <div>
-        <h1>Nugap Analytics</h1>
-        <small>Dashboard executivo do site</small>
-      </div>
+<header class='header'>
+<div class='header-inner'>
+  <div class='logo'>
+    <svg width='36' height='36' viewBox='0 0 36 36' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <rect width='36' height='36' rx='10' fill='var(--primary)'/>
+      <path d='M10 26 L10 14 L18 8 L26 14 L26 26' stroke='#fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/>
+      <path d='M14 26 L14 20 L22 20 L22 26' stroke='#fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/>
+      <circle cx='18' cy='16' r='2' fill='#fff'/>
+    </svg>
+    <div>
+      <div class='logo-text'>Nugap · Dashboard Executivo</div>
+      <div class='logo-sub'>GA4 + Framework AARRR &middot; 23 mar – 19 abr 2026</div>
     </div>
-    <nav class="nav">
-      <button class="tab-btn active" data-tab="overview">Visão geral</button>
-      <button class="tab-btn" data-tab="acquisition">Aquisição</button>
-      <button class="tab-btn" data-tab="content">Conteúdo</button>
-      <button class="tab-btn" data-tab="audience">Audiência</button>
-      <button class="tab-btn" data-tab="business">Problemas de negócio</button>
-    </nav>
-    <div class="sidebar-foot">
-      <button class="theme-toggle" data-theme-toggle>Alternar tema</button>
-      <div style="font-size:var(--text-xs);color:var(--color-text-muted)">
-        Base: 23/03/2026 a 19/04/2026<br>Fonte: Google Analytics 4
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-    <div class="tabs-mobile">
-      <button class="tab-btn active" data-tab="overview">Visão geral</button>
-      <button class="tab-btn" data-tab="acquisition">Aquisição</button>
-      <button class="tab-btn" data-tab="content">Conteúdo</button>
-      <button class="tab-btn" data-tab="audience">Audiência</button>
-      <button class="tab-btn" data-tab="business">Problemas</button>
-    </div>
-
-    <div class="topbar">
-      <div class="hero">
-        <h2>Desempenho digital do Nugap</h2>
-        <p>Leitura executiva do funil de aquisição, comportamento de conteúdo e hipóteses de negócio para o site do laboratório. O foco deste dashboard é mostrar onde existe tração, onde há perda de eficiência e quais perguntas o gestor deve priorizar.</p>
-      </div>
-      <div class="period">28 dias analisados</div>
-    </div>
-
-    <section id="overview" class="tab-panel active">
-      <div class="kpi-grid">
-        <div class="card kpi"><div class="label">Usuários ativos</div><div class="value">215</div><div class="meta">214 novos usuários, sinal de base ainda pouco recorrente</div></div>
-        <div class="card kpi"><div class="label">Sessões</div><div class="value">242</div><div class="meta">Média de 1,13 sessão por usuário</div></div>
-        <div class="card kpi"><div class="label">Eventos</div><div class="value">1.021</div><div class="meta">Cerca de 4,22 eventos por sessão</div></div>
-        <div class="card kpi"><div class="label">Engajamento médio</div><div class="value">29,3s</div><div class="meta">Tempo médio por usuário ativo ainda baixo</div></div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card panel">
-          <h3>Entradas ao longo do período</h3>
-          <p>Novos usuários cresceram depois do início da coleta e concentraram picos nos dias 21 a 25, com máximo de 21 novos usuários em um único dia.</p>
-          <canvas id="newUsersChart"></canvas>
-        </div>
-        <div class="card panel small">
-          <h3>Leitura executiva</h3>
-          <p>Pontos que merecem atenção imediata do gestor.</p>
-          <div class="insights">
-            <div class="insight"><strong>A aquisição existe, mas a retenção é fraca.</strong> Quase toda a base é nova, com poucos retornos consistentes.</div>
-            <div class="insight"><strong>SEO e mídia paga sustentam o tráfego.</strong> Organic e Paid Search representam a maior parte das entradas do site.</div>
-            <div class="insight"><strong>Há falha de mensuração do funil.</strong> Leads qualificados e leads convertidos aparecem zerados em todo o período.</div>
-            <div class="insight"><strong>Conteúdo sobre água lidera o interesse.</strong> A página “Água” combina alto volume com rejeição elevada, sugerindo ajuste de UX e CTA.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card panel">
-          <h3>Participação por canal</h3>
-          <p>A captura de novos usuários é concentrada em busca orgânica, busca paga e acesso direto.</p>
-          <canvas id="channelShareChart"></canvas>
-        </div>
-        <div class="card panel">
-          <h3>Engajamento por canal</h3>
-          <p>Referral tem amostra pequena, mas a melhor qualidade. Direct é o canal mais fraco em profundidade e engajamento.</p>
-          <canvas id="engagementChart"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <section id="acquisition" class="tab-panel">
-      <div class="grid-2">
-        <div class="card panel">
-          <h3>Canais de aquisição</h3>
-          <p>Busca orgânica entrega maior volume e melhor qualidade relativa. Busca paga amplia alcance, mas com engajamento consideravelmente menor.</p>
-          <table>
-            <thead><tr><th>Canal</th><th>Usuários</th><th>Tempo médio</th><th>Sessões engajadas/usuário</th><th>Leitura</th></tr></thead>
-            <tbody>
-              <tr><td>Organic Search</td><td>99</td><td>47,2s</td><td>0,84</td><td><span class="badge good">Principal motor</span></td></tr>
-              <tr><td>Paid Search</td><td>62</td><td>17,9s</td><td>0,44</td><td><span class="badge warn">Volume com menor qualidade</span></td></tr>
-              <tr><td>Direct</td><td>50</td><td>5,9s</td><td>0,26</td><td><span class="badge bad">Baixo interesse</span></td></tr>
-              <tr><td>Referral</td><td>2</td><td>52,0s</td><td>1,00</td><td><span class="badge good">Boa qualidade, pouca escala</span></td></tr>
-              <tr><td>Unassigned</td><td>2</td><td>55,5s</td><td>0,50</td><td><span class="badge warn">Rastreio incompleto</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="card panel">
-          <h3>Origem / mídia da sessão</h3>
-          <p>Google domina tanto o orgânico quanto o pago. Há sinais incipientes de descoberta via IA generativa, mas ainda muito residuais.</p>
-          <table>
-            <thead><tr><th>Origem / mídia</th><th>Sessões</th><th>Comentário</th></tr></thead>
-            <tbody>
-              <tr><td>google / organic</td><td>116</td><td>Base principal do tráfego recorrente de descoberta</td></tr>
-              <tr><td>google / cpc</td><td>66</td><td>Importante para escala, precisa revisão de landing pages</td></tr>
-              <tr><td>(direct) / (none)</td><td>51</td><td>Pode misturar marca forte com tráfego mal atribuído</td></tr>
-              <tr><td>bing / organic</td><td>4</td><td>Baixa relevância</td></tr>
-              <tr><td>chatgpt.com / (not set)</td><td>2</td><td>Sinal inicial de descoberta assistida por IA</td></tr>
-              <tr><td>gemini.google.com / referral</td><td>1</td><td>Canal emergente</td></tr>
-              <tr><td>l.wl.co / referral</td><td>1</td><td>Residual</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card panel">
-          <h3>Eficiência por sessão</h3>
-          <p>A diferença entre canais fica mais evidente quando observamos taxa de engajamento e eventos por sessão.</p>
-          <canvas id="sessionEfficiencyChart"></canvas>
-        </div>
-        <div class="card panel small">
-          <h3>O que reportar ao gestor</h3>
-          <p>Recomendações diretas para a aba de aquisição do dashboard executivo.</p>
-          <div class="insights">
-            <div class="insight"><strong>Rebalancear mídia paga.</strong> O tráfego pago traz escala, mas com menos profundidade do que o orgânico.</div>
-            <div class="insight"><strong>Separar branded vs non-branded.</strong> Isso ajuda a entender se a busca paga está captando demanda já existente.</div>
-            <div class="insight"><strong>Auditar UTMs e canal “unassigned”.</strong> Há perda de qualidade analítica por classificação incompleta.</div>
-            <div class="insight"><strong>Criar landing pages específicas por serviço.</strong> O usuário vindo de busca precisa cair em páginas mais aderentes ao termo pesquisado.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="content" class="tab-panel">
-      <div class="grid-2">
-        <div class="card panel">
-          <h3>Páginas com mais visualizações</h3>
-          <p>Conteúdos de água e café lideram a navegação. A home concentra entrada, mas páginas temáticas já capturam interesse relevante.</p>
-          <canvas id="pagesChart"></canvas>
-        </div>
-        <div class="card panel">
-          <h3>Taxa de rejeição por página</h3>
-          <p>Páginas com alta rejeição precisam de revisão de proposta de valor, CTA, links internos e escaneabilidade.</p>
-          <canvas id="bounceChart"></canvas>
-        </div>
-      </div>
-
-      <div class="card panel">
-        <h3>Leitura de conteúdo</h3>
-        <p>Quais páginas ajudam a marca e quais parecem desperdiçar tráfego.</p>
-        <table>
-          <thead><tr><th>Página</th><th>Visualizações</th><th>Usuários ativos</th><th>Taxa de rejeição</th><th>Diagnóstico</th></tr></thead>
-          <tbody>
-            <tr><td>Nugap – Núcleo Global de Análise e Pesquisa</td><td>109</td><td>84</td><td>38,5%</td><td>Boa porta de entrada, mas pode empurrar mais para serviços e contato</td></tr>
-            <tr><td>Água – Nugap</td><td>80</td><td>69</td><td>59,5%</td><td>Alto interesse com fuga elevada; prioridade máxima de otimização</td></tr>
-            <tr><td>Conheça os principais padrões da água potável</td><td>23</td><td>14</td><td>29,4%</td><td>Conteúdo promissor para topo e meio de funil</td></tr>
-            <tr><td>Conheça as principais classificações do café</td><td>19</td><td>15</td><td>31,3%</td><td>Tema com boa aderência para SEO técnico</td></tr>
-            <tr><td>Credenciamentos</td><td>14</td><td>15</td><td>17,6%</td><td>Página institucional forte para reduzir objeções comerciais</td></tr>
-            <tr><td>Contato</td><td>11</td><td>10</td><td>16,7%</td><td>Sinal positivo, mas ainda com baixo volume absoluto</td></tr>
-            <tr><td>Blog</td><td>4</td><td>4</td><td>100,0%</td><td>Experiência ou navegação do hub precisa revisão</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="audience" class="tab-panel">
-      <div class="kpi-grid">
-        <div class="card kpi"><div class="label">Total de usuários</div><div class="value">215</div><div class="meta">214 são novos usuários</div></div>
-        <div class="card kpi"><div class="label">Usuários recorrentes</div><div class="value">14</div><div class="meta">Baixo retorno na visão por aquisição</div></div>
-        <div class="card kpi"><div class="label">Sessões por usuário</div><div class="value">1,13</div><div class="meta">Baixa profundidade de relacionamento</div></div>
-        <div class="card kpi"><div class="label">Visualizações por sessão</div><div class="value">1,29</div><div class="meta">Usuário tende a visitar poucas páginas</div></div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card panel">
-          <h3>Top cidades</h3>
-          <p>A concentração em Belo Horizonte e São Paulo sugere presença regional forte com expansão nacional ainda inicial.</p>
-          <canvas id="citiesChart"></canvas>
-        </div>
-        <div class="card panel small">
-          <h3>Comportamento da base</h3>
-          <p>O público ainda está em fase de descoberta, não de relacionamento contínuo.</p>
-          <div class="insights">
-            <div class="insight"><strong>Belo Horizonte lidera.</strong> Isso é coerente com presença local e pode orientar campanhas regionais.</div>
-            <div class="insight"><strong>São Paulo aparece forte.</strong> Há potencial comercial fora da praça principal.</div>
-            <div class="insight"><strong>Retenção muito baixa.</strong> O site ainda não cria hábito nem jornada de acompanhamento.</div>
-            <div class="insight"><strong>Dados de audiência são pouco segmentados.</strong> Só existe “All Users”, sem públicos por interesse ou estágio do funil.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card panel">
-        <h3>Retenção semanal</h3>
-        <p>O relatório de coorte mostra base inicial crescendo, mas praticamente sem retenção consistente nas semanas seguintes.</p>
-        <canvas id="retentionChart"></canvas>
-        <div class="footer-note">Valores negativos no export foram tratados como ausência de dado no dashboard para evitar distorção visual.</div>
-      </div>
-    </section>
-
-    <section id="business" class="tab-panel">
-      <div class="card panel">
-        <h3>Problemas de negócio a responder</h3>
-        <p>Essas são as perguntas que o dashboard deve ajudar o gestor a acompanhar continuamente.</p>
-        <div class="business-list">
-          <div class="business-item"><h4>1. O tráfego que chega ao site está gerando oportunidades comerciais reais?</h4><p>Hoje a resposta é inconclusiva, porque os eventos de leads qualificados e leads convertidos estão zerados no período inteiro. A primeira prioridade é corrigir a mensuração do funil comercial.</p></div>
-          <div class="business-item"><h4>2. A mídia paga está atraindo o público certo ou apenas comprando visitas?</h4><p>Paid Search traz volume, mas entrega engajamento bem inferior ao Organic Search. O gestor deve comparar campanhas, termos e landing pages para separar escala de qualidade.</p></div>
-          <div class="business-item"><h4>3. Quais páginas mais contribuem para intenção comercial?</h4><p>Água, credenciamentos, home e contato devem ser tratadas como páginas estratégicas. A tarefa é descobrir quais delas levam a clique em WhatsApp, formulário, orçamento ou ligação.</p></div>
-          <div class="business-item"><h4>4. Onde estamos perdendo usuários antes do contato?</h4><p>A página “Água” é o principal alerta: alto volume e rejeição elevada. Isso pode indicar desalinhamento entre busca, conteúdo, prova técnica e chamada para ação.</p></div>
-          <div class="business-item"><h4>5. O site está construindo recorrência e autoridade?</h4><p>A base é quase toda nova e pouco recorrente. O gestor precisa medir assinatura de conteúdo, retorno ao blog, revisitas e engajamento por cluster temático.</p></div>
-          <div class="business-item"><h4>6. Existe potencial regional e setorial ainda não explorado?</h4><p>Belo Horizonte lidera, mas São Paulo já aparece forte. Isso abre hipótese para campanhas segmentadas por cidade, setor produtivo e tipo de análise laboratorial.</p></div>
-        </div>
-      </div>
-
-      <div class="grid-3" style="margin-top:16px;">
-        <div class="card panel small">
-          <h3>Prioridade alta</h3>
-          <p>O que deveria entrar no plano de ação imediato.</p>
-          <div class="insights">
-            <div class="insight"><strong>Instrumentar conversões.</strong> Formulário, WhatsApp, clique em telefone, envio de orçamento e download técnico.</div>
-            <div class="insight"><strong>Otimizar página de água.</strong> Melhorar promessa, prova técnica, escaneabilidade e CTA.</div>
-            <div class="insight"><strong>Separar canais pagos.</strong> Medir campanha, grupo de anúncio, termo e página de destino.</div>
-          </div>
-        </div>
-        <div class="card panel small">
-          <h3>Prioridade média</h3>
-          <p>Ajustes que aumentam a inteligência do dashboard.</p>
-          <div class="insights">
-            <div class="insight"><strong>Criar públicos.</strong> Água, café, credenciamento, institucional e contato.</div>
-            <div class="insight"><strong>Mapear microconversões.</strong> Scroll profundo, clique em CTA, navegação para contato.</div>
-            <div class="insight"><strong>Cluster de conteúdo.</strong> Relacionar posts de topo com páginas de serviço.</div>
-          </div>
-        </div>
-        <div class="card panel small">
-          <h3>Prioridade estratégica</h3>
-          <p>Temas para evolução do negócio digital.</p>
-          <div class="insights">
-            <div class="insight"><strong>SEO comercial.</strong> Páginas para análises laboratoriais com intenção de contratação.</div>
-            <div class="insight"><strong>Expansão regional.</strong> Testes em São Paulo e outras cidades com demanda industrial.</div>
-            <div class="insight"><strong>Atribuição avançada.</strong> Entender impacto combinado entre orgânico, pago e tráfego direto.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+  </div>
+  <div class='header-actions'>
+    <button class='btn' id='themeBtn'>&#9790; Tema</button>
+    <button class='btn btn-primary' onclick='window.print()'>Exportar PDF</button>
+  </div>
 </div>
-
+</header>
+<nav class='tabs-bar' id='tabsBar'>
+  <div class='tabs-inner' id='tabsInner'></div>
+</nav>
+<div id='pages'></div>
 <script>
-const charts = [];
-const textColor = () => getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim();
-const mutedColor = () => getComputedStyle(document.documentElement).getPropertyValue('--color-text-muted').trim();
-const borderColor = () => getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim();
-const primary = () => getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
-const blue = () => getComputedStyle(document.documentElement).getPropertyValue('--color-blue').trim();
-const warning = () => getComputedStyle(document.documentElement).getPropertyValue('--color-warning').trim();
-const success = () => getComputedStyle(document.documentElement).getPropertyValue('--color-success').trim();
-const error = () => getComputedStyle(document.documentElement).getPropertyValue('--color-error').trim();
-const purple = () => getComputedStyle(document.documentElement).getPropertyValue('--color-purple').trim();
+const DATA = {"summary": {"active_users": 215, "new_users": 214, "avg_eng": 29.3, "events": 1021, "returning_users": 20, "retention_proxy": 9.3, "organic": 99, "paid": 62, "direct": 49, "referral": 2, "total_pageviews": 312, "contact_views": 11}, "channels": [{"Grupo principal de canais do primeiro usuário (Agrupamento de canais padrão)": "Organic Search", "Novos usuários": 99}, {"Grupo principal de canais do primeiro usuário (Agrupamento de canais padrão)": "Paid Search", "Novos usuários": 62}, {"Grupo principal de canais do primeiro usuário (Agrupamento de canais padrão)": "Direct", "Novos usuários": 49}, {"Grupo principal de canais do primeiro usuário (Agrupamento de canais padrão)": "Referral", "Novos usuários": 2}, {"Grupo principal de canais do primeiro usuário (Agrupamento de canais padrão)": "Unassigned", "Novos usuários": 2}], "pages": [{"Caminho da página e classe da tela": "/", "Visualizações": 109, "Usuários ativos": 84, "Visualizações por usuário ativo": 1.2976190476190477, "Tempo médio de engajamento por usuário ativo": 30.107142857142858, "Contagem de eventos": 374, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/agua/", "Visualizações": 78, "Usuários ativos": 67, "Visualizações por usuário ativo": 1.164179104477612, "Tempo médio de engajamento por usuário ativo": 16.16417910447761, "Contagem de eventos": 266, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/agua/conheca-os-principais-padroes-da-agua-potavel/", "Visualizações": 23, "Usuários ativos": 14, "Visualizações por usuário ativo": 1.6428571428571428, "Tempo médio de engajamento por usuário ativo": 17.571428571428573, "Contagem de eventos": 72, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/cafe/conheca-as-principais-classificacoes-do-cafe/", "Visualizações": 19, "Usuários ativos": 15, "Visualizações por usuário ativo": 1.2666666666666666, "Tempo médio de engajamento por usuário ativo": 34.6, "Contagem de eventos": 60, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/credenciamento/", "Visualizações": 14, "Usuários ativos": 15, "Visualizações por usuário ativo": 0.9333333333333332, "Tempo médio de engajamento por usuário ativo": 16.6, "Contagem de eventos": 48, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/a-nugap/", "Visualizações": 13, "Usuários ativos": 12, "Visualizações por usuário ativo": 1.0833333333333333, "Tempo médio de engajamento por usuário ativo": 44.91666666666666, "Contagem de eventos": 38, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/services/cafe/", "Visualizações": 12, "Usuários ativos": 10, "Visualizações por usuário ativo": 1.2, "Tempo médio de engajamento por usuário ativo": 34.9, "Contagem de eventos": 30, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/contato/", "Visualizações": 11, "Usuários ativos": 10, "Visualizações por usuário ativo": 1.1, "Tempo médio de engajamento por usuário ativo": 11.5, "Contagem de eventos": 28, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/agua/o-que-e-agua-potavel-e-hora-de-entender/", "Visualizações": 9, "Usuários ativos": 8, "Visualizações por usuário ativo": 1.125, "Tempo médio de engajamento por usuário ativo": 57.875, "Contagem de eventos": 29, "Eventos principais": 0, "Receita total": 0}, {"Caminho da página e classe da tela": "/cafe/ranking-os-maiores-produtores-de-cafe-do-brasil/", "Visualizações": 6, "Usuários ativos": 6, "Visualizações por usuário ativo": 1.0, "Tempo médio de engajamento por usuário ativo": 12.166666666666666, "Contagem de eventos": 20, "Eventos principais": 0, "Receita total": 0}], "pages_bounce": [{"Título da página e classe da tela": "Nugap – Núcleo Global de Análise e Pesquisa", "Visualizações": 109, "Usuários ativos": 84, "Contagem de eventos": 374, "Taxa de rejeição": 0.3854166666666667, "Bounce_pct": 38.5}, {"Título da página e classe da tela": "Água – Nugap", "Visualizações": 80, "Usuários ativos": 69, "Contagem de eventos": 274, "Taxa de rejeição": 0.5945945945945946, "Bounce_pct": 59.5}, {"Título da página e classe da tela": "Conheça os principais padrões da água potável – Nugap", "Visualizações": 23, "Usuários ativos": 14, "Contagem de eventos": 72, "Taxa de rejeição": 0.2941176470588235, "Bounce_pct": 29.4}, {"Título da página e classe da tela": "Conheça as principais classificações do café – Nugap", "Visualizações": 19, "Usuários ativos": 15, "Contagem de eventos": 60, "Taxa de rejeição": 0.3125, "Bounce_pct": 31.2}, {"Título da página e classe da tela": "Credenciamentos – Nugap", "Visualizações": 14, "Usuários ativos": 15, "Contagem de eventos": 48, "Taxa de rejeição": 0.1764705882352941, "Bounce_pct": 17.6}, {"Título da página e classe da tela": "O Nugap – Nugap", "Visualizações": 13, "Usuários ativos": 12, "Contagem de eventos": 38, "Taxa de rejeição": 0.1666666666666666, "Bounce_pct": 16.7}, {"Título da página e classe da tela": "Café – Nugap", "Visualizações": 12, "Usuários ativos": 10, "Contagem de eventos": 30, "Taxa de rejeição": 0.1666666666666666, "Bounce_pct": 16.7}, {"Título da página e classe da tela": "Contato – Nugap", "Visualizações": 11, "Usuários ativos": 10, "Contagem de eventos": 28, "Taxa de rejeição": 0.1666666666666666, "Bounce_pct": 16.7}, {"Título da página e classe da tela": "O que é água potável? – Nugap", "Visualizações": 9, "Usuários ativos": 8, "Contagem de eventos": 29, "Taxa de rejeição": 0.375, "Bounce_pct": 37.5}, {"Título da página e classe da tela": "Ranking: os maiores produtores de café do Brasil – Nugap", "Visualizações": 6, "Usuários ativos": 6, "Contagem de eventos": 20, "Taxa de rejeição": 0.6666666666666666, "Bounce_pct": 66.7}, {"Título da página e classe da tela": "Blog – Nugap", "Visualizações": 4, "Usuários ativos": 4, "Contagem de eventos": 13, "Taxa de rejeição": 1.0, "Bounce_pct": 100.0}, {"Título da página e classe da tela": "Microscopia em alimentos – Nugap", "Visualizações": 4, "Usuários ativos": 4, "Contagem de eventos": 10, "Taxa de rejeição": 0.25, "Bounce_pct": 25.0}, {"Título da página e classe da tela": "Mapa define nova portaria para o café torrado e moído – Nugap", "Visualizações": 2, "Usuários ativos": 2, "Contagem de eventos": 9, "Taxa de rejeição": 1.0, "Bounce_pct": 100.0}, {"Título da página e classe da tela": "Notícias – Nugap", "Visualizações": 2, "Usuários ativos": 1, "Contagem de eventos": 6, "Taxa de rejeição": 0.0, "Bounce_pct": 0.0}, {"Título da página e classe da tela": "Regulamento técnico do Café Torrado – Nugap", "Visualizações": 2, "Usuários ativos": 2, "Contagem de eventos": 5, "Taxa de rejeição": 0.5, "Bounce_pct": 50.0}, {"Título da página e classe da tela": "A importância da análise da água de poços artesianos – Nugap", "Visualizações": 1, "Usuários ativos": 1, "Contagem de eventos": 3, "Taxa de rejeição": 1.0, "Bounce_pct": 100.0}, {"Título da página e classe da tela": "Notícias – Página: 2 – Nugap", "Visualizações": 1, "Usuários ativos": 1, "Contagem de eventos": 2, "Taxa de rejeição": 0.0, "Bounce_pct": 0.0}], "cities": [{"Cidade": "Belo Horizonte", "Usuários ativos": 46}, {"Cidade": "Sao Paulo", "Usuários ativos": 27}, {"Cidade": "Rio de Janeiro", "Usuários ativos": 6}, {"Cidade": "Contagem", "Usuários ativos": 5}, {"Cidade": "Curitiba", "Usuários ativos": 4}, {"Cidade": "Betim", "Usuários ativos": 3}, {"Cidade": "Cheyenne", "Usuários ativos": 3}, {"Cidade": "Divinopolis", "Usuários ativos": 3}, {"Cidade": "Porto Alegre", "Usuários ativos": 3}, {"Cidade": "Salvador", "Usuários ativos": 3}, {"Cidade": "Sete Lagoas", "Usuários ativos": 3}, {"Cidade": "Para de Minas", "Usuários ativos": 2}, {"Cidade": "Montes Claros", "Usuários ativos": 2}, {"Cidade": "Itauna", "Usuários ativos": 2}, {"Cidade": "Dublin", "Usuários ativos": 2}], "countries": [{"País": "Brazil", "Usuários ativos": 187, "Novos usuários": 187, "Sessões engajadas": 122, "Taxa de engajamento": 0.5700934579439252}, {"País": "United States", "Usuários ativos": 18, "Novos usuários": 17, "Sessões engajadas": 0, "Taxa de engajamento": 0.0}, {"País": "Germany", "Usuários ativos": 3, "Novos usuários": 3, "Sessões engajadas": 1, "Taxa de engajamento": 0.3333333333333333}, {"País": "Ireland", "Usuários ativos": 2, "Novos usuários": 2, "Sessões engajadas": 2, "Taxa de engajamento": 1.0}, {"País": "Hong Kong", "Usuários ativos": 1, "Novos usuários": 1, "Sessões engajadas": 0, "Taxa de engajamento": 0.0}, {"País": "Netherlands", "Usuários ativos": 1, "Novos usuários": 1, "Sessões engajadas": 0, "Taxa de engajamento": 0.0}, {"País": "Portugal", "Usuários ativos": 1, "Novos usuários": 1, "Sessões engajadas": 1, "Taxa de engajamento": 1.0}, {"País": "Singapore", "Usuários ativos": 1, "Novos usuários": 1, "Sessões engajadas": 0, "Taxa de engajamento": 0.0}, {"País": "United Kingdom", "Usuários ativos": 1, "Novos usuários": 1, "Sessões engajadas": 0, "Taxa de engajamento": 0.0}], "devices": [{"Categoria da plataforma / dispositivo": "web / desktop", "Usuários ativos": 125}, {"Categoria da plataforma / dispositivo": "web / mobile", "Usuários ativos": 89}, {"Categoria da plataforma / dispositivo": "web / tablet", "Usuários ativos": 1}], "browsers": [{"Navegador": "Chrome", "Usuários ativos": 158}, {"Navegador": "Safari", "Usuários ativos": 32}, {"Navegador": "Edge", "Usuários ativos": 11}, {"Navegador": "Firefox", "Usuários ativos": 10}, {"Navegador": "Samsung Internet", "Usuários ativos": 3}, {"Navegador": "Opera", "Usuários ativos": 1}], "os": [{"Sistema operacional": "Windows", "Usuários ativos": 100}, {"Sistema operacional": "Android", "Usuários ativos": 52}, {"Sistema operacional": "iOS", "Usuários ativos": 38}, {"Sistema operacional": "Macintosh", "Usuários ativos": 15}, {"Sistema operacional": "Linux", "Usuários ativos": 8}, {"Sistema operacional": "Chrome OS", "Usuários ativos": 2}], "trend": [{"dia_num": 0, "novos_usuarios": 0, "usuarios_recorrentes": 0}, {"dia_num": 1, "novos_usuarios": 0, "usuarios_recorrentes": 0}, {"dia_num": 2, "novos_usuarios": 0, "usuarios_recorrentes": 0}, {"dia_num": 3, "novos_usuarios": 0, "usuarios_recorrentes": 0}, {"dia_num": 4, "novos_usuarios": 9, "usuarios_recorrentes": 0}, {"dia_num": 5, "novos_usuarios": 1, "usuarios_recorrentes": 0}, {"dia_num": 6, "novos_usuarios": 2, "usuarios_recorrentes": 0}, {"dia_num": 7, "novos_usuarios": 6, "usuarios_recorrentes": 0}, {"dia_num": 8, "novos_usuarios": 15, "usuarios_recorrentes": 3}, {"dia_num": 9, "novos_usuarios": 11, "usuarios_recorrentes": 2}, {"dia_num": 10, "novos_usuarios": 7, "usuarios_recorrentes": 0}, {"dia_num": 11, "novos_usuarios": 4, "usuarios_recorrentes": 0}, {"dia_num": 12, "novos_usuarios": 2, "usuarios_recorrentes": 0}, {"dia_num": 13, "novos_usuarios": 3, "usuarios_recorrentes": 0}, {"dia_num": 14, "novos_usuarios": 12, "usuarios_recorrentes": 0}, {"dia_num": 15, "novos_usuarios": 9, "usuarios_recorrentes": 0}, {"dia_num": 16, "novos_usuarios": 13, "usuarios_recorrentes": 4}, {"dia_num": 17, "novos_usuarios": 18, "usuarios_recorrentes": 4}, {"dia_num": 18, "novos_usuarios": 11, "usuarios_recorrentes": 0}, {"dia_num": 19, "novos_usuarios": 4, "usuarios_recorrentes": 0}, {"dia_num": 20, "novos_usuarios": 2, "usuarios_recorrentes": 2}, {"dia_num": 21, "novos_usuarios": 21, "usuarios_recorrentes": 1}, {"dia_num": 22, "novos_usuarios": 17, "usuarios_recorrentes": 1}, {"dia_num": 23, "novos_usuarios": 16, "usuarios_recorrentes": 1}, {"dia_num": 24, "novos_usuarios": 12, "usuarios_recorrentes": 1}, {"dia_num": 25, "novos_usuarios": 13, "usuarios_recorrentes": 1}, {"dia_num": 26, "novos_usuarios": 2, "usuarios_recorrentes": 0}, {"dia_num": 27, "novos_usuarios": 4, "usuarios_recorrentes": 0}], "session_origin": [{"Origem / mídia da sessão": "google / organic", "Sessões": 116}, {"Origem / mídia da sessão": "google / cpc", "Sessões": 66}, {"Origem / mídia da sessão": "(direct) / (none)", "Sessões": 51}, {"Origem / mídia da sessão": "bing / organic", "Sessões": 4}, {"Origem / mídia da sessão": "chatgpt.com / (not set)", "Sessões": 2}, {"Origem / mídia da sessão": "gemini.google.com / referral", "Sessões": 1}, {"Origem / mídia da sessão": "l.wl.co / referral", "Sessões": 1}], "manual_origin": [{"Origem da campanha manual da sessão": "google", "Sessões": 179}, {"Origem da campanha manual da sessão": "bing", "Sessões": 4}, {"Origem da campanha manual da sessão": "chatgpt.com", "Sessões": 2}, {"Origem da campanha manual da sessão": "gemini.google.com", "Sessões": 1}, {"Origem da campanha manual da sessão": "l.wl.co", "Sessões": 1}, {"Origem da campanha manual da sessão": "syndicatedsearch.goog", "Sessões": 1}], "alavancas": [{"titulo": "SEO Orgânico: maior volume, custo zero", "descricao": "99 novos usuários chegaram por busca orgânica — 46% do total —, sem custo direto por clique. O laboratório já ranqueia bem para termos técnicos de água e café.", "metricas": "99 usuários orgânicos (46%)", "acao": "Publicar artigos técnicos sobre análise de alimentos, microscopia e normas MAPA/ANVISA com intenção comercial explícita.", "impacto": "Alto", "urgencia": "Imediato"}, {"titulo": "Página /agua/ é a 2ª mais visitada", "descricao": "Água concentra 80 views e 67 usuários únicos. Os artigos sobre água potável e poços artesianos também aparecem na lista.", "metricas": "80 views | 67 usuários únicos", "acao": "Adicionar CTA visível ('Solicitar análise') na página de água e criar uma landing page específica de análise de água.", "impacto": "Alto", "urgencia": "Imediato"}, {"titulo": "Mídia paga opera sem rastreamento de retorno", "descricao": "62 usuários vieram via Google Ads, mas sem evento de conversão configurado no GA4, o custo por lead (CPL) é incalculável.", "metricas": "62 usuários via CPC", "acao": "Configurar evento de conversão no GA4 ligado ao formulário de contato e ao clique em WhatsApp para medir CPL real.", "impacto": "Alto", "urgencia": "Imediato — investimento às cegas"}, {"titulo": "Tráfego direto indica reconhecimento de marca", "descricao": "49 usuários acessaram diretamente (URL digitado ou favorito) — sinal de clientes que já conhecem o Nugap e podem ser fidelizados.", "metricas": "49 usuários diretos (23%)", "acao": "Criar newsletter técnica mensal e programa de acompanhamento para clientes recorrentes.", "impacto": "Médio", "urgencia": "Curto prazo"}, {"titulo": "Páginas de café e institucional têm maior engajamento", "descricao": "A página /a-nugap/ tem 44.9s e /cafe/ tem 34.9s de tempo médio — os visitantes leem com atenção, indicando alta intenção de qualificação.", "metricas": "A Nugap: 44.9s | Café: 34.9s", "acao": "Inserir provas sociais (selos ISO, MAPA, ANVISA) e botão de orçamento nestas páginas.", "impacto": "Alto", "urgencia": "Imediato"}, {"titulo": "Página de Contato está no fundo do funil com baixo alcance", "descricao": "Apenas 11 visualizações na página /contato/ indicam que a grande maioria dos visitantes não chega até o ponto de conversão.", "metricas": "11 views (5% do tráfego total)", "acao": "Inserir CTAs de contato em todas as páginas de serviço e artigos de blog. Testar botão flutuante de WhatsApp.", "impacto": "Alto", "urgencia": "Imediato"}, {"titulo": "41% dos acessos são via mobile", "descricao": "89 de 215 usuários acessaram pelo celular. Se o formulário não estiver otimizado para mobile, leads são perdidos nesta etapa.", "metricas": "89 mobile vs 125 desktop", "acao": "Testar todo o fluxo de contato e orçamento no celular. Garantir que o WhatsApp seja clicável e rastreado no mobile.", "impacto": "Médio", "urgencia": "Imediato"}, {"titulo": "BH e SP concentram 34% do tráfego", "descricao": "Belo Horizonte lidera com 46 usuários e São Paulo com 27. O laboratório tem espaço para crescer em mercados paulistas e no agronegócio.", "metricas": "BH: 46 | SP: 27 | RJ: 6", "acao": "Criar campanhas regionais no Google Ads para SP, Triângulo Mineiro e regiões cafeicultoras.", "impacto": "Médio", "urgencia": "Médio prazo"}], "governance": [{"Etapa": "Aquisição", "Metrica": "Canais de aquisição", "Status": "Disponível", "Dados": "214 novos usuários por canal (orgânico, pago, direto, referral)"}, {"Etapa": "Aquisição", "Metrica": "Tráfego ao site", "Status": "Disponível", "Dados": "215 usuários ativos"}, {"Etapa": "Aquisição", "Metrica": "Top páginas por visualização", "Status": "Disponível", "Dados": "10 páginas com tempo de engajamento"}, {"Etapa": "Aquisição", "Metrica": "Distribuição geográfica", "Status": "Disponível", "Dados": "Cobertura por cidade e país"}, {"Etapa": "Aquisição", "Metrica": "Dispositivo/Navegador/OS", "Status": "Disponível", "Dados": "Desktop 58%, Mobile 41%"}, {"Etapa": "Retenção", "Metrica": "Usuários recorrentes (proxy digital)", "Status": "Disponível (proxy)", "Dados": "20 usuários retornaram"}, {"Etapa": "Retenção", "Metrica": "Taxa de rejeição por página", "Status": "Disponível", "Dados": "De 16% (Café) a 100% (Blog)"}, {"Etapa": "Retenção", "Metrica": "Tempo médio de engajamento", "Status": "Disponível", "Dados": "29.3s por usuário ativo"}, {"Etapa": "Referral", "Metrica": "Leads por indicação (canal Referral)", "Status": "Disponível (baixo volume)", "Dados": "2 usuários via Referral"}, {"Etapa": "Referral", "Metrica": "Menções via IA (chatgpt, gemini)", "Status": "Disponível (proxy)", "Dados": "3 sessões originadas por IA"}]};
 
-function baseOptions() {
-  return {
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:textColor(),font:{family:'Satoshi'}}}},
-    scales:{
-      x:{ticks:{color:mutedColor(),font:{family:'Satoshi'}},grid:{color:borderColor()}},
-      y:{ticks:{color:mutedColor(),font:{family:'Satoshi'}},grid:{color:borderColor()}}
-    }
-  }
-}
+const TABS = [
+  {id:'overview',   label:'Visão Geral'},
+  {id:'acquisition',label:'Aquisição'},
+  {id:'retention',  label:'Retenção'},
+  {id:'referral',   label:'Referral'},
+  {id:'content',    label:'Conteúdo & Páginas'},
+  {id:'techgeo',    label:'Tecnologia & Geo'},
+  {id:'alavancas',  label:'🔑 Alavancas de Negócio'},
+  {id:'governance', label:'Cobertura de Métricas'},
+];
 
-function makeCharts(){
-  charts.forEach(c=>c.destroy()); charts.length = 0;
+const tabsInner = document.getElementById('tabsInner');
+const pagesEl = document.getElementById('pages');
 
-  charts.push(new Chart(document.getElementById('newUsersChart'), {
-    type:'line',
-    data:{labels:['D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','D14','D15','D16','D17','D18','D19','D20','D21','D22','D23','D24','D25','D26','D27'],datasets:[{label:'Novos usuários',data:[0,0,0,0,9,1,2,6,15,11,7,4,2,3,12,9,13,18,11,4,2,21,17,16,12,13,2,4],borderColor:primary(),backgroundColor:primary()+'22',fill:true,tension:.35,pointRadius:3,pointBackgroundColor:primary()}]},
-    options:baseOptions()
-  }));
-
-  charts.push(new Chart(document.getElementById('channelShareChart'), {
-    type:'doughnut',
-    data:{labels:['Organic Search','Paid Search','Direct','Referral','Unassigned'],datasets:[{data:[99,62,49,2,2],backgroundColor:[primary(),blue(),warning(),success(),purple()],borderColor:getComputedStyle(document.documentElement).getPropertyValue('--color-surface').trim(),borderWidth:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:textColor(),font:{family:'Satoshi'}}}}}
-  }));
-
-  charts.push(new Chart(document.getElementById('engagementChart'), {
-    type:'bar',
-    data:{labels:['Organic','Paid','Direct','Referral','Unassigned'],datasets:[{label:'Tempo médio de engajamento (s)',data:[47.23,17.85,5.94,52,55.5],backgroundColor:[primary(),blue(),warning(),success(),purple()]}]},
-    options:baseOptions()
-  }));
-
-  charts.push(new Chart(document.getElementById('sessionEfficiencyChart'), {
-    type:'bar',
-    data:{labels:['Organic Search','Paid Search','Direct','Unassigned','Referral'],datasets:[{label:'Taxa de engajamento',data:[0.6917,0.4091,0.2549,0.3333,1],backgroundColor:primary()},{label:'Eventos por sessão',data:[4.5583,3.8939,3.6667,5,7.5],backgroundColor:blue()}]},
-    options:baseOptions()
-  }));
-
-  charts.push(new Chart(document.getElementById('pagesChart'), {
-    type:'bar',
-    data:{labels:['Home','Água','Padrões água','Classificações café','Credenciamentos','O Nugap','Café','Contato'],datasets:[{label:'Visualizações',data:[109,80,23,19,14,13,12,11],backgroundColor:[primary(),blue(),success(),warning(),purple(),primary(),warning(),success()]}]},
-    options:baseOptions()
-  }));
-
-  charts.push(new Chart(document.getElementById('bounceChart'), {
-    type:'bar',
-    data:{labels:['Blog','Mapa portaria','Produtores café','Água','Home','O que é água potável?','Contato','Credenciamentos'],datasets:[{label:'Taxa de rejeição',data:[1,1,0.6667,0.5946,0.3854,0.375,0.1667,0.1765],backgroundColor:[error(),error(),warning(),warning(),blue(),blue(),success(),success()]}]},
-    options:baseOptions()
-  }));
-
-  charts.push(new Chart(document.getElementById('citiesChart'), {
-    type:'bar',
-    data:{labels:['Belo Horizonte','São Paulo','Rio de Janeiro','Contagem','Curitiba','Betim','Cheyenne','Divinópolis'],datasets:[{label:'Usuários ativos',data:[46,27,6,5,4,3,3,3],backgroundColor:[primary(),blue(),warning(),success(),purple(),primary(),warning(),blue()]}]},
-    options:baseOptions()
-  }));
-
-  charts.push(new Chart(document.getElementById('retentionChart'), {
-    type:'line',
-    data:{labels:['8-14 mar','15-21 mar','22-28 mar','29 mar-4 abr','5-11 abr','12-18 abr'],datasets:[{label:'Semana 0',data:[0,0,10,47,70,83],borderColor:primary(),backgroundColor:primary(),tension:.3},{label:'Semana 1',data:[0,0,0,0,0,null],borderColor:blue(),backgroundColor:blue(),tension:.3},{label:'Semana 2',data:[0,0,0,1,null,null],borderColor:warning(),backgroundColor:warning(),tension:.3}]},
-    options:baseOptions()
-  }));
-}
-
-makeCharts();
-
-document.querySelectorAll('[data-tab]').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const tab = btn.dataset.tab;
-    document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id===tab));
+TABS.forEach((t,i) => {
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn' + (i===0?' active':'');
+  btn.textContent = t.label;
+  btn.dataset.target = t.id;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(t.id).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
   });
+  tabsInner.appendChild(btn);
+
+  const page = document.createElement('div');
+  page.className = 'page' + (i===0?' active':'');
+  page.id = t.id;
+  pagesEl.appendChild(page);
 });
 
-(function(){
-  const toggle=document.querySelector('[data-theme-toggle]');
-  const root=document.documentElement;
-  let theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
-  root.setAttribute('data-theme',theme);
-  toggle.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';root.setAttribute('data-theme',theme);makeCharts();});
-})();
+function table(rows, cols) {
+  if(!rows||!rows.length) return '<p style="color:var(--muted);padding:12px">Sem dados</p>';
+  return `<div class='tbl-wrap'><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${r[c]??''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+
+function badge(cls, txt) { return `<span class='badge ${cls}'>${txt}</span>`; }
+
+function impBadge(v) { return v==='Alto'? badge('b-ok',v): badge('b-partial',v); }
+function urgBadge(v) {
+  if(v&&v.startsWith('Imediato')) return badge('urg-imm','Imediato');
+  if(v&&v.startsWith('Curto')) return badge('urg-curto','Curto prazo');
+  return badge('urg-medio','Médio prazo');
+}
+function covBadge(v) {
+  if(v==='Disponível') return badge('b-ok','Disponível');
+  if(v&&v.includes('proxy')) return badge('b-partial','Proxy');
+  if(v&&v.includes('baixo')) return badge('b-partial','Baixo volume');
+  return badge('b-partial','Parcial');
+}
+
+// Build colors helper
+function getVar(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+// CHART REGISTRY for theme updates
+const chartRegistry = {};
+function registerChart(id, cfg) {
+  if(chartRegistry[id]) chartRegistry[id].destroy();
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  chartRegistry[id] = new Chart(canvas, cfg);
+}
+
+function commonOpts(extra) {
+  return Object.assign({
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:getVar('--muted'),font:{size:12,family:'Inter'}}}},
+    scales:{
+      x:{ticks:{color:getVar('--muted'),font:{size:11}},grid:{color:getVar('--border')+''+'40'}},
+      y:{ticks:{color:getVar('--muted'),font:{size:11}},grid:{color:getVar('--border')+''+'40'}}
+    }
+  }, extra||{});
+}
+
+function donutOpts() {
+  return {responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:getVar('--muted'),font:{size:11}}}}};
+}
+
+// ── PAGE BUILDERS ──────────────────────────────────────
+function buildOverview() {
+  const s = DATA.summary;
+  document.getElementById('overview').innerHTML = `
+    <div class='kpi-grid'>
+      <div class='kpi'><div class='kpi-label'>Usuários ativos</div><div class='kpi-val kpi-acc'>${s.active_users}</div><div class='kpi-sub'>Período de 28 dias</div></div>
+      <div class='kpi'><div class='kpi-label'>Novos usuários</div><div class='kpi-val'>${s.new_users}</div><div class='kpi-sub'>${Math.round(s.new_users/s.active_users*100)}% do total</div></div>
+      <div class='kpi'><div class='kpi-label'>Recorrentes</div><div class='kpi-val'>${s.returning_users}</div><div class='kpi-sub'>Retenção proxy ${s.retention_proxy}%</div></div>
+      <div class='kpi'><div class='kpi-label'>Eng. médio</div><div class='kpi-val'>${s.avg_eng}s</div><div class='kpi-sub'>Por usuário ativo</div></div>
+      <div class='kpi'><div class='kpi-label'>Total de eventos</div><div class='kpi-val'>${s.events}</div><div class='kpi-sub'>Interações registradas</div></div>
+      <div class='kpi'><div class='kpi-label'>Pageviews totais</div><div class='kpi-val'>${s.total_pageviews}</div><div class='kpi-sub'>Visualizações de página</div></div>
+    </div>
+    <div class='grid g2l' style='margin-bottom:16px'>
+      <div class='card'>
+        <div class='card-title'>Tendência diária — Novos vs Recorrentes</div>
+        <div class='chart-wrap'><canvas id='trendChart'></canvas></div>
+      </div>
+      <div class='card'>
+        <div class='card-title'>Canais de origem</div>
+        <div class='chart-wrap'><canvas id='channelDonut'></canvas></div>
+      </div>
+    </div>
+    <div class='grid g3'>
+      <div class='card'>
+        <div class='card-title'>Aquisição</div>
+        <p style='font-size:.85rem;color:var(--muted)'>O tráfego opera, puxado por orgânico (46%) e pago (29%). Porém sem evento de conversão configurado, o funil não fecha.</p>
+        <div class='note'><strong>Ação:</strong> Configurar rastreamento de clique em WhatsApp e envio de formulário.</div>
+      </div>
+      <div class='card'>
+        <div class='card-title'>Retenção</div>
+        <p style='font-size:.85rem;color:var(--muted)'>Retorno digital existe mas é baixo (${s.retention_proxy}% proxy). Dados de retenção real de clientes do laboratório precisam vir do CRM.</p>
+        <div class='note'><strong>Ação:</strong> Integrar sistema de pedidos ao GA4 para rastrear clientes recorrentes.</div>
+      </div>
+      <div class='card'>
+        <div class='card-title'>Conteúdo</div>
+        <p style='font-size:.85rem;color:var(--muted)'>Página /contato/ tem apenas ${s.contact_views} views. A maioria dos visitantes sai antes de converter. CTAs são a alavanca imediata.</p>
+        <div class='note'><strong>Ação:</strong> Inserir botão de orçamento em todas as páginas de serviço.</div>
+      </div>
+    </div>
+  `;
+  const trendLabels = DATA.trend.map(d=>d.dia_num);
+  registerChart('trendChart',{type:'line',data:{labels:trendLabels,datasets:[
+    {label:'Novos usuários',data:DATA.trend.map(d=>d.novos_usuarios),borderColor:'#01696f',backgroundColor:'rgba(1,105,111,.1)',fill:true,tension:.4,pointRadius:3},
+    {label:'Recorrentes',data:DATA.trend.map(d=>d.usuarios_recorrentes),borderColor:'#c8870a',backgroundColor:'rgba(200,135,10,.1)',fill:true,tension:.4,pointRadius:3}
+  ]},options:commonOpts()});
+  const ch = DATA.channels.map(r=>Object.values(r));
+  registerChart('channelDonut',{type:'doughnut',data:{labels:ch.map(r=>r[0]),datasets:[{data:ch.map(r=>r[1]),backgroundColor:['#01696f','#3d9ea8','#c8870a','#7a39bb','#964219'],borderWidth:0}]},options:donutOpts()});
+}
+
+function buildAcquisition() {
+  document.getElementById('acquisition').innerHTML = `
+    <div class='section-title'>Aquisição</div>
+    <div class='kpi-grid' style='margin-bottom:16px'>
+      <div class='kpi'><div class='kpi-label'>Orgânico</div><div class='kpi-val kpi-acc'>${DATA.summary.organic}</div><div class='kpi-sub'>Busca Google/Bing</div></div>
+      <div class='kpi'><div class='kpi-label'>Pago (CPC)</div><div class='kpi-val'>${DATA.summary.paid}</div><div class='kpi-sub'>Google Ads</div></div>
+      <div class='kpi'><div class='kpi-label'>Direto</div><div class='kpi-val'>${DATA.summary.direct}</div><div class='kpi-sub'>URL ou favorito</div></div>
+      <div class='kpi'><div class='kpi-label'>Referral</div><div class='kpi-val'>${DATA.summary.referral}</div><div class='kpi-sub'>Indicação de site</div></div>
+    </div>
+    <div class='grid g2' style='margin-bottom:16px'>
+      <div class='card'><div class='card-title'>Novos usuários por canal</div><div class='chart-wrap'><canvas id='channelBar'></canvas></div></div>
+      <div class='card'><div class='card-title'>Origem / mídia da sessão</div>${table(DATA.session_origin,['Origem / mídia da sessão','Sessões'])}</div>
+    </div>
+    <div class='card'><div class='card-title'>Origem de campanha manual</div>${table(DATA.manual_origin,['Origem da campanha manual da sessão','Sessões'])}</div>
+  `;
+  const ch = DATA.channels.map(r=>Object.values(r));
+  registerChart('channelBar',{type:'bar',data:{labels:ch.map(r=>r[0]),datasets:[{label:'Novos usuários',data:ch.map(r=>r[1]),backgroundColor:['#01696f','#3d9ea8','#c8870a','#7a39bb','#964219'],borderRadius:6}]},options:commonOpts()});
+}
+
+function buildRetention() {
+  document.getElementById('retention').innerHTML = `
+    <div class='section-title'>Retenção <span style='font-size:.8rem;font-weight:400;color:var(--muted)'>(proxy digital — retorno ao site)</span></div>
+    <div class='kpi-grid' style='margin-bottom:16px'>
+      <div class='kpi'><div class='kpi-label'>Usuários recorrentes</div><div class='kpi-val kpi-acc'>${DATA.summary.returning_users}</div><div class='kpi-sub'>Retornaram no período</div></div>
+      <div class='kpi'><div class='kpi-label'>Taxa proxy</div><div class='kpi-val'>${DATA.summary.retention_proxy}%</div><div class='kpi-sub'>Recorrentes / ativos</div></div>
+      <div class='kpi'><div class='kpi-label'>Engajamento médio</div><div class='kpi-val'>${DATA.summary.avg_eng}s</div><div class='kpi-sub'>Por usuário ativo</div></div>
+    </div>
+    <div class='grid g2l'>
+      <div class='card'><div class='card-title'>Distribuição novos vs recorrentes</div><div class='chart-wrap'><canvas id='retDonut'></canvas></div></div>
+      <div class='card'>
+        <div class='card-title'>Interpretação</div>
+        <p style='font-size:.84rem;color:var(--muted);margin-bottom:12px'>Esta métrica representa retorno ao site, não retorno de clientes ao laboratório. Para medir retenção real (clientes enviando amostras recorrentemente), é necessário integrar o CRM ou sistema de pedidos.</p>
+        <div class='note' style='margin-bottom:10px'><strong>Próximo passo:</strong> Criar evento personalizado no GA4 disparado quando o cliente loga no portal do laboratório ou reenvia pedido.</div>
+      </div>
+    </div>
+    <div class='card' style='margin-top:16px'>
+      <div class='card-title'>Taxa de rejeição por página</div>
+      <div class='chart-wrap'><canvas id='bounceChart'></canvas></div>
+    </div>
+  `;
+  registerChart('retDonut',{type:'doughnut',data:{labels:['Recorrentes','Novos / únicos'],datasets:[{data:[DATA.summary.returning_users,DATA.summary.active_users-DATA.summary.returning_users],backgroundColor:['#01696f','#e0dbd2'],borderWidth:0}]},options:donutOpts()});
+  const bp = DATA.pages_bounce.slice(0,10);
+  registerChart('bounceChart',{type:'bar',data:{labels:bp.map(r=>r['Título da página e classe da tela'].replace(' – Nugap','')),datasets:[{label:'Taxa de rejeição %',data:bp.map(r=>r['Bounce_pct']),backgroundColor:'#c8870a',borderRadius:5}]},options:commonOpts({indexAxis:'y'})});
+}
+
+function buildReferral() {
+  document.getElementById('referral').innerHTML = `
+    <div class='section-title'>Referral</div>
+    <div class='grid g2'>
+      <div class='card'><div class='card-title'>Fontes de referral observadas</div><div class='chart-wrap'><canvas id='refBar'></canvas></div></div>
+      <div class='card'>
+        <div class='card-title'>Análise</div>
+        <p style='font-size:.84rem;color:var(--muted);margin-bottom:10px'>O canal Referral registrou apenas 2 novos usuários. Há 3 sessões vindas de ferramentas de IA (chatgpt.com e gemini.google.com), indicando que o Nugap já aparece em respostas de IA generativa.</p>
+        <div class='note' style='margin-bottom:10px'><strong>O que falta:</strong> NPS, rastreamento de indicação declarada no formulário ("como você nos conheceu?") e cadastro de parceiros (certificadoras, cooperativas).</div>
+      </div>
+    </div>
+    <div class='card' style='margin-top:16px'><div class='card-title'>Origens de campanha manual</div>${table(DATA.manual_origin,['Origem da campanha manual da sessão','Sessões'])}</div>
+  `;
+  registerChart('refBar',{type:'bar',data:{labels:['Referral canal','chatgpt.com','gemini.google.com'],datasets:[{label:'Usuários/sessões',data:[DATA.summary.referral,2,1],backgroundColor:['#01696f','#3d9ea8','#c8870a'],borderRadius:6}]},options:commonOpts()});
+}
+
+function buildContent() {
+  document.getElementById('content').innerHTML = `
+    <div class='section-title'>Conteúdo & Páginas</div>
+    <div class='card' style='margin-bottom:16px'><div class='card-title'>Top 10 páginas por visualização</div><div class='chart-wrap'><canvas id='pagesBar'></canvas></div></div>
+    <div class='grid g2'>
+      <div class='card'><div class='card-title'>Tabela de páginas</div>${table(DATA.pages,['Caminho da página e classe da tela','Visualizações','Usuários ativos','Tempo médio de engajamento por usuário ativo'])}</div>
+      <div class='card'>
+        <div class='card-title'>Insights</div>
+        <p style='font-size:.84rem;color:var(--muted);margin-bottom:10px'>Home e /agua/ concentram quase metade das visualizações. O conteúdo sobre café tem alto engajamento (34.9s), e a página institucional /a-nugap/ apresenta o maior tempo de leitura (44.9s).</p>
+        <div class='note' style='margin-bottom:10px'><strong>Oportunidade:</strong> Inserir CTAs de orçamento em /agua/, /cafe/ e /credenciamento/, que são as páginas com maior intenção de compra potencial.</div>
+        <div class='note'><strong>Contato:</strong> Apenas ${DATA.summary.contact_views} views na página /contato/ — o funil vaza antes do ponto de conversão.</div>
+      </div>
+    </div>
+  `;
+  const pg = DATA.pages.slice(0,10);
+  registerChart('pagesBar',{type:'bar',data:{labels:pg.map(r=>r['Caminho da página e classe da tela']),datasets:[{label:'Visualizações',data:pg.map(r=>r['Visualizações']),backgroundColor:getVar('--primary'),borderRadius:5}]},options:commonOpts({indexAxis:'y'})});
+}
+
+function buildTechGeo() {
+  document.getElementById('techgeo').innerHTML = `
+    <div class='section-title'>Tecnologia & Geografia</div>
+    <div class='grid g3' style='margin-bottom:16px'>
+      <div class='card'><div class='card-title'>Dispositivos</div><div class='chart-wrap'><canvas id='devChart'></canvas></div></div>
+      <div class='card'><div class='card-title'>Navegadores</div><div class='chart-wrap'><canvas id='brwChart'></canvas></div></div>
+      <div class='card'><div class='card-title'>Sistemas operacionais</div><div class='chart-wrap'><canvas id='osChart'></canvas></div></div>
+    </div>
+    <div class='grid g2'>
+      <div class='card'><div class='card-title'>Top cidades</div>${table(DATA.cities,['Cidade','Usuários ativos'])}</div>
+      <div class='card'><div class='card-title'>Países</div>${table(DATA.countries,['País','Usuários ativos','Novos usuários','Sessões engajadas','Taxa de engajamento'])}</div>
+    </div>
+  `;
+  const devc = ['#01696f','#c8870a','#7a39bb','#964219','#3d9ea8'];
+  const dv = DATA.devices.map(r=>Object.values(r));
+  registerChart('devChart',{type:'doughnut',data:{labels:dv.map(r=>r[0]),datasets:[{data:dv.map(r=>r[1]),backgroundColor:devc,borderWidth:0}]},options:donutOpts()});
+  const br = DATA.browsers.map(r=>Object.values(r));
+  registerChart('brwChart',{type:'bar',data:{labels:br.map(r=>r[0]),datasets:[{label:'Usuários',data:br.map(r=>r[1]),backgroundColor:'#3d9ea8',borderRadius:5}]},options:commonOpts()});
+  const os = DATA.os.map(r=>Object.values(r));
+  registerChart('osChart',{type:'bar',data:{labels:os.map(r=>r[0]),datasets:[{label:'Usuários',data:os.map(r=>r[1]),backgroundColor:'#c8870a',borderRadius:5}]},options:commonOpts()});
+}
+
+function buildAlavancas() {
+  const cards = DATA.alavancas.map((a,i) => `
+    <div class='alavanca-card'>
+      <div class='alav-header'>
+        <div class='alav-titulo'>${i+1}. ${a.titulo}</div>
+        <div class='alav-badges'>${impBadge(a.impacto)} ${urgBadge(a.urgencia)}</div>
+      </div>
+      <div class='alav-metrica'>📊 ${a.metricas}</div>
+      <div class='alav-desc'>${a.descricao}</div>
+      <div class='divider'></div>
+      <div class='alav-acao'><strong>Ação recomendada:</strong> ${a.acao}</div>
+    </div>
+  `).join('');
+  document.getElementById('alavancas').innerHTML = `
+    <div class='section-title'>🔑 Alavancas de Negócio</div>
+    <p style='font-size:.875rem;color:var(--muted);margin-bottom:20px'>Oportunidades identificadas com base nos dados disponíveis do GA4. Ordenadas por impacto e urgência de execução.</p>
+    <div class='grid g2'>${cards}</div>
+    <div class='card' style='margin-top:16px'>
+      <div class='card-title'>Resumo de impacto × urgência</div>
+      <div class='chart-wrap'><canvas id='alavChart'></canvas></div>
+    </div>
+  `;
+  registerChart('alavChart',{type:'bar',data:{
+    labels:DATA.alavancas.map(a=>a.titulo.substring(0,35)+'…'),
+    datasets:[
+      {label:'Impacto (Alto=2, Médio=1)',data:DATA.alavancas.map(a=>a.impacto==='Alto'?2:1),backgroundColor:'#01696f',borderRadius:5},
+      {label:'Urgência (Imediato=3, Curto=2, Médio=1)',data:DATA.alavancas.map(a=>a.urgencia.startsWith('Imediato')?3:a.urgencia.startsWith('Curto')?2:1),backgroundColor:'#c8870a',borderRadius:5}
+    ]
+  },options:commonOpts()});
+}
+
+function buildGovernance() {
+  const rows = DATA.governance.map(r=>`
+    <tr>
+      <td><strong>${r.Etapa}</strong></td>
+      <td>${r.Metrica}</td>
+      <td>${covBadge(r.Status)}</td>
+      <td style='color:var(--muted);font-size:.82rem'>${r.Dados}</td>
+    </tr>
+  `).join('');
+  document.getElementById('governance').innerHTML = `
+    <div class='section-title'>Cobertura de Métricas · Proposta AARRR</div>
+    <p style='font-size:.875rem;color:var(--muted);margin-bottom:20px'>Apenas as métricas que podem ser medidas com os dados disponíveis. Indicadores sem cobertura (Ativação, Revenue, NPS) foram removidos até que a instrumentação seja implementada.</p>
+    <div class='card' style='margin-bottom:16px'>
+      <div class='tbl-wrap'><table>
+        <thead><tr><th>Etapa</th><th>Métrica</th><th>Status</th><th>Dados disponíveis</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>
+    <div class='grid g3'>
+      <div class='card'>
+        <div class='card-title' style='color:var(--good)'>✅ O que está coberto</div>
+        <p style='font-size:.84rem;color:var(--muted)'>Aquisição por canal, tráfego, top páginas, geografia, dispositivos, navegadores, usuários recorrentes (proxy) e taxa de rejeição.</p>
+      </div>
+      <div class='card'>
+        <div class='card-title' style='color:var(--accent)'>⚠️ Coberto por proxy</div>
+        <p style='font-size:.84rem;color:var(--muted)'>Retenção digital (retorno ao site, não retorno de clientes ao laboratório) e sinais fracos de referral via IA.</p>
+      </div>
+      <div class='card'>
+        <div class='card-title' style='color:var(--muted)'>🔧 Requer instrumentação</div>
+        <p style='font-size:.84rem;color:var(--muted)'>Conversão visita→lead, lead→cliente, orçamento aprovado, receita, LTV, MRR, churn real e NPS.</p>
+      </div>
+    </div>
+  `;
+}
+
+// INITIALIZE
+buildOverview();
+buildAcquisition();
+buildRetention();
+buildReferral();
+buildContent();
+buildTechGeo();
+buildAlavancas();
+buildGovernance();
+
+// THEME TOGGLE
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', isDark?'light':'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '☾ Tema' : '☀ Tema';
+  // rebuild all charts with new colors
+  const activeId = document.querySelector('.page.active').id;
+  if(activeId==='overview') buildOverview();
+  else if(activeId==='acquisition') buildAcquisition();
+  else if(activeId==='retention') buildRetention();
+  else if(activeId==='referral') buildReferral();
+  else if(activeId==='content') buildContent();
+  else if(activeId==='techgeo') buildTechGeo();
+  else if(activeId==='alavancas') buildAlavancas();
+  else if(activeId==='governance') buildGovernance();
+});
 </script>
-</body>
-</html>
+</body></html>
